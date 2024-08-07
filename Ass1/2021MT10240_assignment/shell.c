@@ -3,22 +3,114 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
-#define INSIZE 100
+
+#define INSIZE 2049
+#define HISTORYSIZE 10
+int COUNT = 0;
+char HOME[INSIZE];
+char DIRSUFFIX[INSIZE];
+char HOME1[INSIZE * 2];
+char PWD[INSIZE * 2];
+
+/**
+ * @brief Function to print history of commands
+ *
+ * @param history
+ */
+void printHistory(char history[HISTORYSIZE][INSIZE])
+{
+    if (COUNT <= HISTORYSIZE)
+    {
+        for (int i = 0; i < COUNT; i++)
+        {
+            printf("%d: %s\n", i + 1, history[i]);
+        }
+        return;
+    }
+
+    for (int i = 0; i < HISTORYSIZE; i++)
+    {
+        printf("%d: %s\n", i + 1, history[(i + COUNT) % HISTORYSIZE]);
+    }
+}
+
+void changeDirectory(char *args[INSIZE])
+{
+    if (args[1] == NULL)
+    {
+        chdir(PWD);
+        return;
+    }
+    if (args[1][0] == '~')
+    {
+        chdir(HOME1);
+        strcpy(PWD, HOME1);
+        return;
+    }
+    else
+    {
+        char *temp = (char *)malloc(INSIZE);
+        strcpy(temp, PWD);
+        strcat(temp, "/");
+        strcat(temp, args[1]);
+        if (chdir(temp) == 0)
+        {
+            strcpy(PWD, temp);
+        }
+        else
+        {
+            printf("Invalid Directory\n");
+        }
+    }
+    return;
+}
+
 int main(int argc, char *argv[])
 {
+    // get current working directory
+    if (getcwd(HOME, sizeof(HOME)) != NULL)
+    {
+        printf("Current working dir: %s\n", HOME);
+    }
+    else
+    {
+        perror("getcwd() error");
+        return 1;
+    }
+    strcpy(DIRSUFFIX, "/home/user");
+    strcat(HOME1, HOME);
+    strcat(HOME1, DIRSUFFIX);
+    printf("PWD: %s\n", HOME1);
+    strcpy(PWD, HOME1);
+    chdir(HOME1);
+
     printf("hello (pid:%d)\n", (int)getpid());
     while (1)
     {
         // Taking string input in C - https://stackoverflow.com/a/58703958/23151163
+        // chdir(PWD);
         char str[INSIZE];
+        char history[HISTORYSIZE][INSIZE]; // to store history of commands
+
         printf("MTL458 >");
         scanf(" %99[^\n]", str);
+
+        // storing the command in history
+        strcpy(history[COUNT % HISTORYSIZE], str);
+        COUNT++;
 
         // termination on user interrupt
         if (strcmp(str, "exit") == 0)
         {
             printf("Exiting shell\n");
-            break;
+            exit(0);
+        }
+
+        // printing history and continue
+        if (strcmp(str, "history") == 0)
+        {
+            printHistory(history);
+            continue;
         }
 
         int pipeFlag = 0; // Need <stdbool.h> for true and false :-(
@@ -48,6 +140,12 @@ int main(int argc, char *argv[])
         }
         args[i] = '\0';
 
+        // handling cd
+        if (strcmp(args[0], "cd") == 0)
+        {
+            changeDirectory(args);
+            continue;
+        }
         // parse pipe commands
         char *args1[INSIZE], *args2[INSIZE];
         if (pipeFlag)
@@ -156,3 +254,9 @@ int main(int argc, char *argv[])
     }
     return 0;
 }
+/*
+    ╱|、
+    (˚ˎ 。7
+    |、˜〵
+    じしˍ,)ノ
+*/
