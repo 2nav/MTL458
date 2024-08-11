@@ -102,6 +102,12 @@ void changeDirectory(char *args[INSIZE])
     return;
 }
 
+/**
+ * @brief Function to parse input string into space separated tokens and check for pipe
+ *
+ * @param str
+ * @param args
+ */
 void inputParser(char *str, char *args[INSIZE])
 {
     char *token = strtok(str, " ");
@@ -130,6 +136,14 @@ void inputParser(char *str, char *args[INSIZE])
     args[i] = '\0';
 }
 
+/**
+ * @brief Function to parse pipe input string into space separated tokens for both commands
+ *
+ * @param str
+ * @param args
+ * @param args1
+ * @param args2
+ */
 void inputParserPipe(char *str, char *args[INSIZE], char *args1[INSIZE], char *args2[INSIZE])
 {
     printf("commandSize1: %d\n commandSize2: %d\n", commandSize1, commandSize2);
@@ -214,27 +228,6 @@ int main(int argc, char *argv[])
         // https://stackoverflow.com/a/3890186/23151163
         char *args[INSIZE];
         inputParser(str, args);
-        // char *token = strtok(str, " ");
-        // int i = 0, commandSize1 = 0, commandSize2 = 0; // commandSize1 is for first command and commandSize2 is for second command
-        // while (token != NULL)
-        // {
-        //     if (pipeFlag)
-        //     {
-        //         commandSize2++;
-        //     }
-        //     else
-        //     {
-        //         commandSize1++;
-        //     }
-        //     if (strcmp(token, "|") == 0)
-        //     {
-        //         pipeFlag = 1;
-        //     }
-        //     args[i] = token;
-        //     token = strtok(NULL, " ");
-        //     i++;
-        // }
-        // args[i] = '\0';
 
         // handling cd
         if (strcmp(args[0], "cd") == 0)
@@ -247,26 +240,6 @@ int main(int argc, char *argv[])
         if (pipeFlag)
         {
             inputParserPipe(str, args, args1, args2);
-
-            // for (int i = 0; i < commandSize1 - 1; i++)
-            // {
-            //     args1[i] = args[i];
-            //     if (i == commandSize1 - 2)
-            //     {
-            //         args1[i + 1] = '\0';
-            //     }
-            //     printf("args1[%d]: %s\n", i, args1[i]);
-            // }
-
-            // for (int i = 0; i <= commandSize2; i++)
-            // {
-            //     args2[i] = args[commandSize1 + i];
-            //     // if (i == commandSize2 - 1)
-            //     // {
-            //     //     args2[i + 1] = '\0';
-            //     // }
-            //     printf("args2[%d]: %s\n", i, args2[i]);
-            // }
         }
 
         // printf("commandSize1: %d\n commandSize2: %d\n", commandSize1, commandSize2);
