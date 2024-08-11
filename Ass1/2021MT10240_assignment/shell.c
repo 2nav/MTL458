@@ -5,12 +5,12 @@
 #include <sys/wait.h>
 
 #define INSIZE 2049
-#define HISTORYSIZE 10
+#define HISTORYSIZE 2048
 int COUNT = 0;
 char HOME[INSIZE];
-char DIRSUFFIX[INSIZE];
 char HOME1[INSIZE * 2];
-char PWD[INSIZE * 2];
+char PWD[INSIZE * 2];  // stores present working directory
+char PRWD[INSIZE * 2]; // stores previous working directory
 
 /**
  * @brief Function to print history of commands
@@ -23,73 +23,108 @@ void printHistory(char history[HISTORYSIZE][INSIZE])
     {
         for (int i = 0; i < COUNT; i++)
         {
-            printf("%d: %s\n", i + 1, history[i]);
+            printf("%s\n", history[i]);
         }
         return;
     }
 
     for (int i = 0; i < HISTORYSIZE; i++)
     {
-        printf("%d: %s\n", i + 1, history[(i + COUNT) % HISTORYSIZE]);
+        printf("%s\n", history[(i + COUNT) % HISTORYSIZE]);
     }
 }
 
+/**
+ * @brief Function to change directory
+ *
+ * @param args
+ */
 void changeDirectory(char *args[INSIZE])
 {
+    // getcwd(PWD, sizeof(PWD));
+
+    // goes to home directory, saves current and previous directory
     if (args[1] == NULL)
     {
-        chdir(PWD);
-        return;
-    }
-    if (args[1][0] == '~')
-    {
+        strcpy(PRWD, PWD);
         chdir(HOME1);
         strcpy(PWD, HOME1);
         return;
     }
+
+    // same as above, but with ~
+    if (args[1][0] == '~')
+    {
+        strcpy(PRWD, PWD);
+        chdir(HOME1);
+        strcpy(PWD, HOME1);
+        return;
+    }
+
+    // goes to previous directory, stores current directory in PRWD and previous directory in PWD
+    else if (args[1][0] == '-')
+    {
+        // printf("PRWD: %s\n", PRWD);
+        if (chdir(PRWD) < 0)
+        {
+            printf("Invalid Directory\n");
+            return;
+        }
+        char *temp = (char *)malloc(INSIZE * 2);
+        strcpy(temp, PWD);
+        strcpy(PWD, PRWD);
+        strcpy(PRWD, temp);
+        free(temp);
+    }
+
+    // goes to the directory specified in args[1]
     else
     {
-        char *temp = (char *)malloc(INSIZE);
+        char *temp = (char *)malloc(INSIZE * 2);
         strcpy(temp, PWD);
         strcat(temp, "/");
         strcat(temp, args[1]);
         if (chdir(temp) == 0)
         {
+            strcpy(PRWD, PWD);
             strcpy(PWD, temp);
+            printf("PWD: %s\n", PWD);
         }
         else
         {
             printf("Invalid Directory\n");
         }
+        free(temp);
     }
     return;
 }
 
 int main(int argc, char *argv[])
 {
+
     // get current working directory
     if (getcwd(HOME, sizeof(HOME)) != NULL)
     {
-        printf("Current working dir: %s\n", HOME);
+        // printf("Current working dir: %s\n", HOME);
     }
     else
     {
         perror("getcwd() error");
         return 1;
     }
-    strcpy(DIRSUFFIX, "/home/user");
+
     strcat(HOME1, HOME);
-    strcat(HOME1, DIRSUFFIX);
-    printf("PWD: %s\n", HOME1);
+    strcat(HOME1, "/home/user"); // assuming shell is run from the submission directory, adding /home/user to the path
+    // printf("PWD: %s\n", HOME1);
     strcpy(PWD, HOME1);
-    chdir(HOME1);
+    chdir(HOME1); // changing directory to home directory
 
     printf("hello (pid:%d)\n", (int)getpid());
     while (1)
     {
         // Taking string input in C - https://stackoverflow.com/a/58703958/23151163
         // chdir(PWD);
-        char str[INSIZE];
+        char str[INSIZE];                  // to take user input
         char history[HISTORYSIZE][INSIZE]; // to store history of commands
 
         printf("MTL458 >");
@@ -102,7 +137,6 @@ int main(int argc, char *argv[])
         // termination on user interrupt
         if (strcmp(str, "exit") == 0)
         {
-            printf("Exiting shell\n");
             exit(0);
         }
 
@@ -112,6 +146,12 @@ int main(int argc, char *argv[])
             printHistory(history);
             continue;
         }
+
+        // empty command - input not accepting only newline
+        // if (strcmp(str, "") == 0)
+        // {
+        //     continue;
+        // }
 
         int pipeFlag = 0; // Need <stdbool.h> for true and false :-(
 
@@ -172,7 +212,14 @@ int main(int argc, char *argv[])
             }
         }
 
-        printf("commandSize1: %d\n commandSize2: %d\n", commandSize1, commandSize2);
+        // printf("commandSize1: %d\n commandSize2: %d\n", commandSize1, commandSize2);
+
+        // exit if exit is entered in pipe commands
+        // exit brfore fork to avoid killing parent children stuff
+        if (pipeFlag && commandSize1 && commandSize2 && (strcmp(args1[0], "exit") == 0 || strcmp(args2[0], "exit") == 0))
+        {
+            exit(1);
+        }
 
         printf("hello (pid:%d)\n", (int)getpid());
         int rc = fork();
@@ -185,18 +232,13 @@ int main(int argc, char *argv[])
         else if (rc == 0 && pipeFlag == 0)
         { // child (new process)
             printf("child (pid:%d)\n", (int)getpid());
-            // char *myargs[2];
-            // myargs[0] = strdup("ls"); // program: "wc"
-            // myargs[1] = strdup("p3.c"); // arg: input file
-            // myargs[1] = NULL;
-            // mark end of array
-            // execvp(myargs[0], myargs); // runs word count
-            // int n = strlen(str);
-            // printf("n: %d\n", n);
-            // char *args = (char *)str;
-            // printf("args: %s\n", args);
-            execvp(args[0], args);
-            printf("Invalid Command\n");
+
+            if (execvp(args[0], args) < 0)
+            {
+                printf("Invalid Command\n");
+                exit(1);
+            }
+            // exit(0);
         }
         else if (rc == 0 && pipeFlag == 1)
         {
@@ -225,9 +267,11 @@ int main(int argc, char *argv[])
                 dup(pipefd[1]);       // make stdout go to write end of pipe
                 close(pipefd[0]);     // close read end of pipe
 
-                execvp(args1[0], args1);
-                printf("Invalid Command\n");
-                exit(1);
+                if (execvp(args1[0], args1) < 0)
+                {
+                    printf("Invalid Command\n");
+                    exit(1);
+                }
             }
             else
             {
@@ -239,9 +283,11 @@ int main(int argc, char *argv[])
                 dup(pipefd[0]);      // make stdin come from read end of pipe
                 close(pipefd[1]);    // close write end of pipe
 
-                execvp(args2[0], args2);
-                printf("Invalid Command\n");
-                exit(1);
+                if (execvp(args2[0], args2) < 0)
+                {
+                    printf("Invalid Command\n");
+                    exit(1);
+                }
             }
         }
         else
