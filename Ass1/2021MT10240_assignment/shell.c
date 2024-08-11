@@ -12,6 +12,9 @@ char HOME1[INSIZE * 2];
 char PWD[INSIZE * 2];  // stores present working directory
 char PRWD[INSIZE * 2]; // stores previous working directory
 
+int pipeFlag = 0;                       // Need <stdbool.h> for true and false :-(
+int commandSize1 = 0, commandSize2 = 0; // commandSize1 is for first command and commandSize2 is for second command
+
 /**
  * @brief Function to print history of commands
  *
@@ -99,6 +102,58 @@ void changeDirectory(char *args[INSIZE])
     return;
 }
 
+void inputParser(char *str, char *args[INSIZE])
+{
+    char *token = strtok(str, " ");
+    int i = 0;
+    commandSize1 = 0;
+    commandSize2 = 0;
+    while (token != NULL)
+    {
+        if (pipeFlag)
+        {
+            commandSize2++;
+        }
+        else
+        {
+            commandSize1++;
+        }
+        if (strcmp(token, "|") == 0)
+        {
+            printf("pipeFlag: %d\n", pipeFlag);
+            pipeFlag = 1;
+        }
+        args[i] = token;
+        token = strtok(NULL, " ");
+        i++;
+    }
+    args[i] = '\0';
+}
+
+void inputParserPipe(char *str, char *args[INSIZE], char *args1[INSIZE], char *args2[INSIZE])
+{
+    printf("commandSize1: %d\n commandSize2: %d\n", commandSize1, commandSize2);
+    for (int i = 0; i < commandSize1 - 1; i++)
+    {
+        args1[i] = args[i];
+        if (i == commandSize1 - 2)
+        {
+            args1[i + 1] = '\0';
+        }
+        printf("args1[%d]: %s\n", i, args1[i]);
+    }
+
+    for (int i = 0; i <= commandSize2; i++)
+    {
+        args2[i] = args[commandSize1 + i];
+        // if (i == commandSize2 - 1)
+        // {
+        //     args2[i + 1] = '\0';
+        // }
+        printf("args2[%d]: %s\n", i, args2[i]);
+    }
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -153,32 +208,33 @@ int main(int argc, char *argv[])
         //     continue;
         // }
 
-        int pipeFlag = 0; // Need <stdbool.h> for true and false :-(
+        pipeFlag = 0; // Need <stdbool.h> for true and false :-(
 
         // parsing the string into space separated tokens for args
         // https://stackoverflow.com/a/3890186/23151163
         char *args[INSIZE];
-        char *token = strtok(str, " ");
-        int i = 0, commandSize1 = 0, commandSize2 = 0; // commandSize1 is for first command and commandSize2 is for second command
-        while (token != NULL)
-        {
-            if (pipeFlag)
-            {
-                commandSize2++;
-            }
-            else
-            {
-                commandSize1++;
-            }
-            if (strcmp(token, "|") == 0)
-            {
-                pipeFlag = 1;
-            }
-            args[i] = token;
-            token = strtok(NULL, " ");
-            i++;
-        }
-        args[i] = '\0';
+        inputParser(str, args);
+        // char *token = strtok(str, " ");
+        // int i = 0, commandSize1 = 0, commandSize2 = 0; // commandSize1 is for first command and commandSize2 is for second command
+        // while (token != NULL)
+        // {
+        //     if (pipeFlag)
+        //     {
+        //         commandSize2++;
+        //     }
+        //     else
+        //     {
+        //         commandSize1++;
+        //     }
+        //     if (strcmp(token, "|") == 0)
+        //     {
+        //         pipeFlag = 1;
+        //     }
+        //     args[i] = token;
+        //     token = strtok(NULL, " ");
+        //     i++;
+        // }
+        // args[i] = '\0';
 
         // handling cd
         if (strcmp(args[0], "cd") == 0)
@@ -190,26 +246,27 @@ int main(int argc, char *argv[])
         char *args1[INSIZE], *args2[INSIZE];
         if (pipeFlag)
         {
+            inputParserPipe(str, args, args1, args2);
 
-            for (int i = 0; i < commandSize1 - 1; i++)
-            {
-                args1[i] = args[i];
-                if (i == commandSize1 - 2)
-                {
-                    args1[i + 1] = '\0';
-                }
-                printf("args1[%d]: %s\n", i, args1[i]);
-            }
+            // for (int i = 0; i < commandSize1 - 1; i++)
+            // {
+            //     args1[i] = args[i];
+            //     if (i == commandSize1 - 2)
+            //     {
+            //         args1[i + 1] = '\0';
+            //     }
+            //     printf("args1[%d]: %s\n", i, args1[i]);
+            // }
 
-            for (int i = 0; i <= commandSize2; i++)
-            {
-                args2[i] = args[commandSize1 + i];
-                // if (i == commandSize2 - 1)
-                // {
-                //     args2[i + 1] = '\0';
-                // }
-                printf("args2[%d]: %s\n", i, args2[i]);
-            }
+            // for (int i = 0; i <= commandSize2; i++)
+            // {
+            //     args2[i] = args[commandSize1 + i];
+            //     // if (i == commandSize2 - 1)
+            //     // {
+            //     //     args2[i + 1] = '\0';
+            //     // }
+            //     printf("args2[%d]: %s\n", i, args2[i]);
+            // }
         }
 
         // printf("commandSize1: %d\n commandSize2: %d\n", commandSize1, commandSize2);
@@ -267,6 +324,13 @@ int main(int argc, char *argv[])
                 dup(pipefd[1]);       // make stdout go to write end of pipe
                 close(pipefd[0]);     // close read end of pipe
 
+                // handling history command
+                if (strcmp(args1[0], "history") == 0)
+                {
+                    printHistory(history);
+                    exit(0);
+                }
+
                 if (execvp(args1[0], args1) < 0)
                 {
                     printf("Invalid Command\n");
@@ -283,6 +347,12 @@ int main(int argc, char *argv[])
                 dup(pipefd[0]);      // make stdin come from read end of pipe
                 close(pipefd[1]);    // close write end of pipe
 
+                // handling history command
+                if (strcmp(args2[0], "history") == 0)
+                {
+                    printHistory(history);
+                    exit(0);
+                }
                 if (execvp(args2[0], args2) < 0)
                 {
                     printf("Invalid Command\n");
@@ -305,4 +375,19 @@ int main(int argc, char *argv[])
     (˚ˎ 。7
     |、˜〵
     じしˍ,)ノ
+*/
+/*
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡔⠒⠤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⣀⠤⠤⠤⠵⣄⠀⠈⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠓⠤⢀⣀⣠⠤⠷⠦⠤⠬⣦⣀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⣠⠖⠋⠁⠀⠀⠀⠀⠀⠀⠀⠈⠙⢦⡀⠀⠀⠀
+⠀⠀⠀⠀⠀⣠⠞⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦⠀⠀
+⠀⠀⣠⡀⣰⠃⠀⠀⠀⠀⠀⠀⢀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣧⠀
+⣿⣮⣿⣷⠃⠀⠀⠀⠀⠀⠀⠀⠸⠿⣿⣷⣶⣤⣠⣤⣶⣾⣿⣿⡇
+⠉⢭⡿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⠁⠀⣽⡏⣟⣿⡍⠁⠡⠀⣷
+⠀⠈⠀⢻⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠢⢀⡠⠚⠉⠑⢤⡔⠁⠀⡇
+⠀⠀⠀⠘⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠠⣎⣀⡀⠀⠀⠀⠙⣄⣰⠃
+⠀⠀⠀⠀⠙⢆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢢⡀⠀⢈⠝⠋⣹⠃⠀
+⠀⠀⠀⠀⠀⠈⠓⢦⣀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠚⢁⡤⠞⠁⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠒⠦⠤⠤⠤⠤⠴⠖⠚⠉⠀⠀⠀⠀⠀
 */
