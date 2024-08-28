@@ -14,6 +14,7 @@ char PRWD[INSIZE * 2]; // stores previous working directory
 
 int pipeFlag = 0;                       // Need <stdbool.h> for true and false :-(
 int commandSize1 = 0, commandSize2 = 0; // commandSize1 is for first command and commandSize2 is for second command
+int emptyFlag = 0;
 
 /**
  * @brief Function to print history of commands
@@ -70,7 +71,7 @@ void changeDirectory(char *args[INSIZE])
         // printf("PRWD: %s\n", PRWD);
         if (chdir(PRWD) < 0)
         {
-            printf("Invalid Directory\n");
+            fprintf(stderr, "Invalid Command\n");
             return;
         }
         char *temp = (char *)malloc(INSIZE * 2);
@@ -91,11 +92,11 @@ void changeDirectory(char *args[INSIZE])
         {
             strcpy(PRWD, PWD);
             strcpy(PWD, temp);
-            printf("PWD: %s\n", PWD);
+            // printf("PWD: %s\n", PWD);
         }
         else
         {
-            printf("Invalid Directory\n");
+            fprintf(stderr, "Invalid Command\n");
         }
         free(temp);
     }
@@ -110,7 +111,7 @@ void changeDirectory(char *args[INSIZE])
  */
 void inputParser(char *str, char *args[INSIZE])
 {
-    char *token = strtok(str, " ");
+    char *token = strtok(str, " \t");
     int i = 0;
     commandSize1 = 0;
     commandSize2 = 0;
@@ -126,14 +127,18 @@ void inputParser(char *str, char *args[INSIZE])
         }
         if (strcmp(token, "|") == 0)
         {
-            printf("pipeFlag: %d\n", pipeFlag);
             pipeFlag = 1;
+            // printf("pipeFlag: %d\n", pipeFlag);
         }
         args[i] = token;
-        token = strtok(NULL, " ");
+        token = strtok(NULL, " \t");
         i++;
     }
     args[i] = '\0';
+    if (i == 0)
+    {
+        emptyFlag = 1;
+    }
 }
 
 /**
@@ -146,7 +151,7 @@ void inputParser(char *str, char *args[INSIZE])
  */
 void inputParserPipe(char *str, char *args[INSIZE], char *args1[INSIZE], char *args2[INSIZE])
 {
-    printf("commandSize1: %d\n commandSize2: %d\n", commandSize1, commandSize2);
+    // printf("commandSize1: %d\n commandSize2: %d\n", commandSize1, commandSize2);
     for (int i = 0; i < commandSize1 - 1; i++)
     {
         args1[i] = args[i];
@@ -154,7 +159,11 @@ void inputParserPipe(char *str, char *args[INSIZE], char *args1[INSIZE], char *a
         {
             args1[i + 1] = '\0';
         }
-        printf("args1[%d]: %s\n", i, args1[i]);
+        // printf("args1[%d]: %s\n", i, args1[i]);
+    }
+    if (commandSize1 == 1)
+    {
+        args1[0] = '\0';
     }
 
     for (int i = 0; i <= commandSize2; i++)
@@ -164,7 +173,7 @@ void inputParserPipe(char *str, char *args[INSIZE], char *args1[INSIZE], char *a
         // {
         //     args2[i + 1] = '\0';
         // }
-        printf("args2[%d]: %s\n", i, args2[i]);
+        // printf("args2[%d]: %s\n", i, args2[i]);
     }
 }
 
@@ -183,12 +192,13 @@ int main(int argc, char *argv[])
     }
 
     strcat(HOME1, HOME);
-    strcat(HOME1, "/home/user"); // assuming shell is run from the submission directory, adding /home/user to the path
+    // strcat(HOME1, "/home/user"); // assuming shell is run from the submission directory, adding /home/user to the path
+    // assuming my previous assumption was wrong so commented previous line :-(. Idk please run from the right place.
     // printf("PWD: %s\n", HOME1);
     strcpy(PWD, HOME1);
     chdir(HOME1); // changing directory to home directory
 
-    printf("hello (pid:%d)\n", (int)getpid());
+    // printf("hello (pid:%d)\n", (int)getpid());
     while (1)
     {
         // Taking string input in C - https://stackoverflow.com/a/58703958/23151163
@@ -197,7 +207,18 @@ int main(int argc, char *argv[])
         char history[HISTORYSIZE][INSIZE]; // to store history of commands
 
         printf("MTL458 >");
-        scanf(" %99[^\n]", str);
+        // scanf(" %99[^\n]", str);
+
+        // using fgets to take input
+        fgets(str, INSIZE, stdin);
+        str[strcspn(str, "\n")] = '\0';
+        emptyFlag = 0;
+        // empty command - input not accepting only newline
+        if (strcmp(str, "") == 0)
+        {
+            continue;
+        }
+        // printf("input: %s\n", str);
 
         // storing the command in history
         strcpy(history[COUNT % HISTORYSIZE], str);
@@ -216,18 +237,18 @@ int main(int argc, char *argv[])
             continue;
         }
 
-        // empty command - input not accepting only newline
-        // if (strcmp(str, "") == 0)
-        // {
-        //     continue;
-        // }
-
         pipeFlag = 0; // Need <stdbool.h> for true and false :-(
 
         // parsing the string into space separated tokens for args
         // https://stackoverflow.com/a/3890186/23151163
         char *args[INSIZE];
         inputParser(str, args);
+
+        if (emptyFlag)
+        {
+            // fprintf(stderr, "Invalid Command\n");
+            continue;
+        }
 
         // handling cd
         if (strcmp(args[0], "cd") == 0)
@@ -242,16 +263,22 @@ int main(int argc, char *argv[])
             inputParserPipe(str, args, args1, args2);
         }
 
+        if (pipeFlag && (commandSize1 == 1 || commandSize2 == 0))
+        {
+            fprintf(stderr, "Invalid Command\n");
+            continue;
+        }
+
         // printf("commandSize1: %d\n commandSize2: %d\n", commandSize1, commandSize2);
 
         // exit if exit is entered in pipe commands
         // exit brfore fork to avoid killing parent children stuff
-        if (pipeFlag && commandSize1 && commandSize2 && (strcmp(args1[0], "exit") == 0 || strcmp(args2[0], "exit") == 0))
+        if (pipeFlag && ((commandSize1 - 1 && strcmp(args1[0], "exit") == 0) || (commandSize2 && strcmp(args2[0], "exit") == 0)))
         {
             exit(1);
         }
 
-        printf("hello (pid:%d)\n", (int)getpid());
+        // printf("hello (pid:%d)\n", (int)getpid());
         int rc = fork();
         if (rc < 0)
         {
@@ -261,7 +288,7 @@ int main(int argc, char *argv[])
         }
         else if (rc == 0 && pipeFlag == 0)
         { // child (new process)
-            printf("child (pid:%d)\n", (int)getpid());
+            // printf("child (pid:%d)\n", (int)getpid());
 
             if (execvp(args[0], args) < 0)
             {
@@ -272,7 +299,7 @@ int main(int argc, char *argv[])
         }
         else if (rc == 0 && pipeFlag == 1)
         {
-            printf("child (pid:%d)\n", (int)getpid());
+            // printf("child (pid:%d)\n", (int)getpid());
 
             int pipefd[2];
             if (pipe(pipefd) == -1) // https://www.man7.org/linux/man-pages/man2/pipe.2.html
@@ -280,7 +307,6 @@ int main(int argc, char *argv[])
                 perror("pipe");
                 exit(EXIT_FAILURE);
             }
-
             int rc2 = fork();
             if (rc2 < 0)
             {
@@ -291,7 +317,7 @@ int main(int argc, char *argv[])
             else if (rc2 == 0)
             {
                 // child (new process)
-                printf("child (pid:%d)\n", (int)getpid());
+                // printf("child (pid:%d)\n", (int)getpid());
 
                 close(STDOUT_FILENO); // close normal stdout
                 dup(pipefd[1]);       // make stdout go to write end of pipe
@@ -306,7 +332,7 @@ int main(int argc, char *argv[])
 
                 if (execvp(args1[0], args1) < 0)
                 {
-                    printf("Invalid Command\n");
+                    fprintf(stderr, "Invalid Command\n");
                     exit(1);
                 }
             }
@@ -314,8 +340,8 @@ int main(int argc, char *argv[])
             {
                 // parent goes down this path
                 int rc_wait = wait(NULL);
-                printf("parent of %d (rc_wait:%d) (pid:%d)\n",
-                       rc, rc_wait, (int)getpid());
+                // printf("parent of %d (rc_wait:%d) (pid:%d)\n",
+                //    rc, rc_wait, (int)getpid());
                 close(STDIN_FILENO); // close normal stdin
                 dup(pipefd[0]);      // make stdin come from read end of pipe
                 close(pipefd[1]);    // close write end of pipe
@@ -328,7 +354,7 @@ int main(int argc, char *argv[])
                 }
                 if (execvp(args2[0], args2) < 0)
                 {
-                    printf("Invalid Command\n");
+                    fprintf(stderr, "Invalid Command\n");
                     exit(1);
                 }
             }
@@ -337,8 +363,8 @@ int main(int argc, char *argv[])
         {
             // parent goes down this path
             int rc_wait = wait(NULL);
-            printf("parent of %d (rc_wait:%d) (pid:%d)\n",
-                   rc, rc_wait, (int)getpid());
+            // printf("parent of %d (rc_wait:%d) (pid:%d)\n",
+            //    rc, rc_wait, (int)getpid());
         }
     }
     return 0;
@@ -348,19 +374,4 @@ int main(int argc, char *argv[])
     (˚ˎ 。7
     |、˜〵
     じしˍ,)ノ
-*/
-/*
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡔⠒⠤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⣀⠤⠤⠤⠵⣄⠀⠈⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠓⠤⢀⣀⣠⠤⠷⠦⠤⠬⣦⣀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⣠⠖⠋⠁⠀⠀⠀⠀⠀⠀⠀⠈⠙⢦⡀⠀⠀⠀
-⠀⠀⠀⠀⠀⣠⠞⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦⠀⠀
-⠀⠀⣠⡀⣰⠃⠀⠀⠀⠀⠀⠀⢀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣧⠀
-⣿⣮⣿⣷⠃⠀⠀⠀⠀⠀⠀⠀⠸⠿⣿⣷⣶⣤⣠⣤⣶⣾⣿⣿⡇
-⠉⢭⡿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⠁⠀⣽⡏⣟⣿⡍⠁⠡⠀⣷
-⠀⠈⠀⢻⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠢⢀⡠⠚⠉⠑⢤⡔⠁⠀⡇
-⠀⠀⠀⠘⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠠⣎⣀⡀⠀⠀⠀⠙⣄⣰⠃
-⠀⠀⠀⠀⠙⢆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢢⡀⠀⢈⠝⠋⣹⠃⠀
-⠀⠀⠀⠀⠀⠈⠓⢦⣀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠚⢁⡤⠞⠁⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠒⠦⠤⠤⠤⠤⠴⠖⠚⠉⠀⠀⠀⠀⠀
 */
