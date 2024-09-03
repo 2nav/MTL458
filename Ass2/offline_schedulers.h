@@ -34,3 +34,27 @@ typedef struct
 void FCFS(Process p[], int n);
 void RoundRobin(Process p[], int n, int quantum);
 void MultiLevelFeedbackQueue(Process p[], int n, int quantum0, int quantum1, int quantum2);
+
+void FCFS(Process p[], int n)
+{
+    int i = 0;
+    time_t start = time(NULL);
+    while (i++ < n)
+    {
+        // Execute the process
+        p[i].start_time = time(NULL);
+        p[i].process_id = fork();
+        if (p[i].process_id == 0)
+        {
+            execlp(p[i].command, p[i].command, NULL);
+            exit(0);
+        }
+        // Wait for the process to finish
+        waitpid(p[i].process_id, NULL, 0);
+        // Update the process parameters
+        p[i].completion_time = time(NULL);
+        p[i].turnaround_time = p[i].completion_time - p[i].start_time;
+        // p[i].waiting_time = p[i].start_time - start;
+        p[i].response_time = p[i].start_time - start;
+    }
+}
