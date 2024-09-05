@@ -1,0 +1,14 @@
+# run inner loop 10 times
+# for j in 1 2 3 4 5 6 7 8 9 10
+# do
+# # loop and print 1 to 10 numbers
+#     for i in {1..10}
+#     do
+#         echo $i
+#     done
+# sleep 1
+# done
+for j in 1 2 3 4 5 6 7 8 9 10
+do
+    sleep 1
+done

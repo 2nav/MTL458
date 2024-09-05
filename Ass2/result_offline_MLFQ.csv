@@ -1,0 +1,11 @@
+Command, Finished, Error, Burst Time, Turnaround Time, Waiting Time, Response Time
+sleeasdap 4, false, true, 300, 1207, 907, 907
+sleeasdap 4, false, true, 300, 2411, 2111, 2111
+bash sl.sh 1, true, false, 1300, 8927, 7627, 5
+bash sl.sh 2, true, false, 2300, 16244, 13944, 306
+bash sl.sh 2, true, false, 2300, 17147, 14847, 1509
+bash sl.sh 2, true, false, 2300, 17758, 15458, 2412
+bash sl.sh 3, true, false, 3300, 21769, 18469, 1810
+bash sl.sh 4, true, false, 4300, 24776, 20476, 1208
+bash sl.sh 4, true, false, 4300, 25077, 20777, 2713
+bash sl.sh 6, true, false, 6300, 27083, 20783, 606

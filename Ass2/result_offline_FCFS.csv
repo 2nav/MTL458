@@ -1,0 +1,4 @@
+Command, Finished, Error, Burst Time, Turnaround Time, Waiting Time, Response Time
+./test, true, false, 10031, 10031, 0, 0
+./test, true, false, 10035, 20066, 10031, 10031
+./test, true, false, 10036, 30102, 20066, 20066

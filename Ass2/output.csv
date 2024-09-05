@@ -1,0 +1,4 @@
+Command, Finished, Error, Burst Time, Turnaround Time, Waiting Time, Response Time
+sleep 2, true, false, 2002, 2002, 0, 0
+sleep 1, true, false, 1004, 1004, 0, 2002
+sleep 3, true, false, 3002, 3002, 0, 3006
