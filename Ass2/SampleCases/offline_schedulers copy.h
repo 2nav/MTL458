@@ -150,7 +150,7 @@ void FCFS(Process p[], int n)
     fflush(f);
     for (int i = 0; i < n; i++)
     {
-        fprintf(f, "%s, %s, %s, %ld, %ld, %ld, %ld\n", p[i].command, p[i].finished ? "Yes" : "No", p[i].error ? "Yes" : "No", p[i].completion_time - p[i].start_time, p[i].turnaround_time, p[i].waiting_time, p[i].response_time);
+        fprintf(f, "%s,%s,%s,%ld,%ld,%ld,%ld\n", p[i].command, p[i].finished ? "Yes" : "No", p[i].error ? "Yes" : "No", p[i].completion_time - p[i].start_time, p[i].turnaround_time, p[i].waiting_time, p[i].response_time);
         fflush(f);
     }
     fclose(f);
@@ -253,7 +253,7 @@ void RoundRobin(Process p[], int n, int quantum)
                 p[i].waiting_time = p[i].turnaround_time - p[i].burst_time;
                 p[i].response_time = p[i].start_time - start;
 
-                fprintf(f, "%s, %s, %s, %ld, %ld, %ld, %ld\n", p[i].command, p[i].finished ? "Yes" : "No", p[i].error ? "Yes" : "No", p[i].burst_time, p[i].turnaround_time, p[i].waiting_time, p[i].response_time);
+                fprintf(f, "%s,%s,%s,%ld,%ld,%ld,%ld\n", p[i].command, p[i].finished ? "Yes" : "No", p[i].error ? "Yes" : "No", p[i].burst_time, p[i].turnaround_time, p[i].waiting_time, p[i].response_time);
                 fflush(f);
             }
 
@@ -364,7 +364,7 @@ void MultiLevelFeedbackQueue(Process p[], int n, int quantum0, int quantum1, int
                 p[i].waiting_time = p[i].turnaround_time - p[i].burst_time;
                 p[i].response_time = p[i].start_time - start;
 
-                fprintf(f, "%s, %s, %s, %ld, %ld, %ld, %ld\n", p[i].command, p[i].finished ? "Yes" : "No", p[i].error ? "Yes" : "No", p[i].burst_time, p[i].turnaround_time, p[i].waiting_time, p[i].response_time);
+                fprintf(f, "%s,%s,%s,%ld,%ld,%ld,%ld\n", p[i].command, p[i].finished ? "Yes" : "No", p[i].error ? "Yes" : "No", p[i].burst_time, p[i].turnaround_time, p[i].waiting_time, p[i].response_time);
                 fflush(f);
             }
             i++;

@@ -1,4 +1,4 @@
 Command, Finished, Error, Burst Time, Turnaround Time, Waiting Time, Response Time
-./sl.sh 5, Yes, No, 5069, 5069, 0, 0
-./sl.sh 5, Yes, No, 5075, 10144, 5069, 5069
-sleep 1, Yes, No, 1002, 11146, 10144, 10144
+./sl.sh 5,Yes,No,5112,5112,0,0
+./sl.sh 4,Yes,No,4103,9216,5113,5113
+slee 1,Yes,Yes,209,9425,9216,9216

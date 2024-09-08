@@ -17,8 +17,6 @@
 int INSIZE = 1024;
 static bool *GLOB_ERROR;
 
-#define MAX_COMMANDS 50
-
 typedef struct
 {
 
@@ -39,79 +37,6 @@ typedef struct
     uint8_t priority;
 
 } Process;
-
-/**
-  ____  _    _ ______ _    _ ______
- / __ \| |  | |  ____| |  | |  ____|
-| |  | | |  | | |__  | |  | | |__
-| |  | | |  | |  __| | |  | |  __|
-| |__| | |__| | |____| |__| | |____
- \___\_\\____/|______|\____/|______|
- */
-
-// Queue implementation
-typedef struct ProcessQueue
-{
-    Process *processes[MAX_COMMANDS];
-    int head;
-    int tail;
-    int size;
-} ProcessQueue;
-
-// Function to create a queue
-ProcessQueue *createQueue()
-{
-    ProcessQueue *q = (ProcessQueue *)malloc(sizeof(ProcessQueue));
-    q->head = -1;
-    q->tail = -1;
-    return q;
-}
-
-// Function to add an element to the queue
-void enqueue(ProcessQueue *q, Process *p)
-{
-    if (q->head == -1)
-    {
-        q->head = 0;
-    }
-    q->tail = (q->tail + 1);
-    q->processes[q->tail] = p;
-}
-
-// Function to remove an element from the queue
-Process *dequeue(ProcessQueue *q)
-{
-    if (q->head == -1) // Check if the queue is empty
-    {
-        return NULL; // Return NULL if the queue is empty
-    }
-
-    Process *p = q->processes[q->head]; // Get a pointer to the process
-
-    if (q->head == q->tail)
-    {
-        q->head = -1;
-        q->tail = -1;
-    }
-    else
-    {
-        q->head = q->head + 1;
-    }
-
-    return p; // Return the pointer to the process
-}
-
-// Function to check if the queue is empty
-bool isEmpty(ProcessQueue *q)
-{
-    return q->head == -1;
-}
-
-// Function to get the size of the queue
-int size(ProcessQueue *q)
-{
-    return isEmpty(q) ? 0 : q->tail - q->head + 1;
-}
 
 // Function prototypes
 void FCFS(Process p[], int n);
@@ -164,7 +89,6 @@ void FCFS(Process p[], int n)
     // printf("Start time: %f\n", start);
     while (i < n)
     {
-
         // https://stackoverflow.com/a/13274800
         GLOB_ERROR = mmap(NULL, sizeof *GLOB_ERROR, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
         *GLOB_ERROR = false;
@@ -228,7 +152,7 @@ void FCFS(Process p[], int n)
     fflush(f);
     for (int i = 0; i < n; i++)
     {
-        fprintf(f, "%s, %s, %s, %ld, %ld, %ld, %ld\n", p[i].command, p[i].finished ? "Yes" : "No", p[i].error ? "Yes" : "No", p[i].completion_time - p[i].start_time, p[i].turnaround_time, p[i].waiting_time, p[i].response_time);
+        fprintf(f, "%s,%s,%s,%ld,%ld,%ld,%ld\n", p[i].command, p[i].finished ? "Yes" : "No", p[i].error ? "Yes" : "No", p[i].completion_time - p[i].start_time, p[i].turnaround_time, p[i].waiting_time, p[i].response_time);
         fflush(f);
     }
     fclose(f);
@@ -332,7 +256,7 @@ void RoundRobin(Process p[], int n, int quantum)
                 p[i].waiting_time = p[i].turnaround_time - p[i].burst_time;
                 p[i].response_time = p[i].start_time - start;
 
-                fprintf(f, "%s, %s, %s, %ld, %ld, %ld, %ld\n", p[i].command, p[i].finished ? "Yes" : "No", p[i].error ? "Yes" : "No", p[i].burst_time, p[i].turnaround_time, p[i].waiting_time, p[i].response_time);
+                fprintf(f, "%s,%s,%s,%ld,%ld,%ld,%ld\n", p[i].command, p[i].finished ? "Yes" : "No", p[i].error ? "Yes" : "No", p[i].burst_time, p[i].turnaround_time, p[i].waiting_time, p[i].response_time);
                 fflush(f);
             }
 
@@ -353,14 +277,8 @@ void MultiLevelFeedbackQueue(Process p[], int n, int quantum0, int quantum1, int
         p[i].started = false;
         p[i].burst_time = 0;
     }
-    // int quanta[3] = {quantum2, quantum1, quantum0}; // initiailly implemented with 2 as highest, switching makes less readable somewhat, so reversed the order here only
+    int quanta[3] = {quantum2, quantum1, quantum0}; // initiailly implemented with 2 as highest, switching makes less readable somewhat, so reversed the order here only
     int MLFQ_current = 2;
-
-    ProcessQueue *q2 = createQueue();
-    ProcessQueue *q1 = createQueue();
-    ProcessQueue *q0 = createQueue();
-
-    ProcessQueue *queues[3] = {q0, q1, q2};
 
     int i = 0;
     int completed = 0;
@@ -369,113 +287,56 @@ void MultiLevelFeedbackQueue(Process p[], int n, int quantum0, int quantum1, int
     GLOB_ERROR = mmap(NULL, sizeof *GLOB_ERROR, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     *GLOB_ERROR = false;
 
-    FILE *f = fopen("result_offline_MILFQ.csv", "w");
+    FILE *f = fopen("result_offline_MLFQ.csv", "w");
     fprintf(f, "Command, Finished, Error, Burst Time, Turnaround Time, Waiting Time, Response Time\n");
     fflush(f);
-
-    for (int i = 0; i < n; i++)
-    {
-        enqueue(queues[0], &p[i]);
-    }
-    printf("Queue 0 size = %d\n", size(queues[0]));
-    fflush(stdout);
 
     while (completed < n)
     {
         uint64_t cont_start, cont_end = start;
 
         // if a round is complted go to lower priority for all
-        // if (i == n && MLFQ_current > 0)
-        // {
-        //     MLFQ_current--;
-        // }
+        if (i == n && MLFQ_current > 0)
+        {
+            MLFQ_current--;
+        }
         uint64_t curr_t = get_time();
 
         // boost the priority at boostTime intervals
-        if (curr_t - start >= boostTime * (boosts + 1))
+        if (curr_t - start >= boostTime * (boosts + 1) && MLFQ_current == 0)
         {
-            // MLFQ_current = 2;
+            MLFQ_current = 2;
             boosts++;
-
-            // boost all processes to highest priority
-            // boost q[1] to q[0]
-            while (!isEmpty(queues[1]))
-            {
-                // printf("Boosting q1 to q0\n");
-                Process *p = dequeue(queues[1]);
-                enqueue(queues[0], p);
-            }
-            // boost q[2] to q[0]
-            while (!isEmpty(queues[2]))
-            {
-                // printf("Boosting q2 to q0\n");
-                Process *p = dequeue(queues[2]);
-                enqueue(queues[0], p);
-            }
         }
         i %= n;
-        Process *curr;
-        bool queue0, queue1, queue2;
-        queue0 = queue1 = queue2 = false;
-        if (!isEmpty(queues[0]))
-        {
-            curr = dequeue(queues[0]);
-            queue0 = true;
-        }
-        else if (!isEmpty(queues[1]))
-        {
-            curr = dequeue(queues[1]);
-            queue1 = true;
-        }
-        else
-        {
-            curr = dequeue(queues[2]);
-            queue2 = true;
-        }
+
         // continue if process is finished or errored
-        if (curr->finished || curr->error)
+        if (p[i].finished || p[i].error)
         {
             i++;
             continue;
         }
 
-        // if (p[i].finished || p[i].error)
-        // {
-        //     i++;
-        //     continue;
-        // }
-
         // continue process if process is started
-        if (curr->started)
+        if (p[i].started)
         {
-            kill(curr->process_id, SIGCONT);
+            kill(p[i].process_id, SIGCONT);
         }
-
-        // if (p[i].started)
-        // {
-        //     kill(p[i].process_id, SIGCONT);
-        // }
         // start the process if not started
         else
         {
-            curr->start_time = get_time();
-            curr->started = true;
-            curr->process_id = fork();
+            p[i].start_time = get_time();
+            p[i].started = true;
+            p[i].process_id = fork();
         }
-        // else
-        // {
-        //     p[i].start_time = get_time();
-        //     p[i].started = true;
-        //     p[i].process_id = fork();
-        // }
 
         // execute the process
-        if (curr->process_id == 0)
+        if (p[i].process_id == 0)
         {
             char *args[INSIZE];
-            int commandSize = strlen(curr->command);
+            int commandSize = strlen(p[i].command);
             char command[commandSize + 1];
-            strcpy(command, curr->command);
+            strcpy(command, p[i].command);
             command[commandSize] = '\0';
             inputParser(command, args);
             if (execvp(args[0], args) == -1)
@@ -485,134 +346,44 @@ void MultiLevelFeedbackQueue(Process p[], int n, int quantum0, int quantum1, int
             }
             exit(0);
         }
-        // if (p[i].process_id == 0)
-        // {
-        //     char *args[INSIZE];
-        //     int commandSize = strlen(p[i].command);
-        //     char command[commandSize + 1];
-        //     strcpy(command, p[i].command);
-        //     command[commandSize] = '\0';
-        //     inputParser(command, args);
-        //     if (execvp(args[0], args) == -1)
-        //     {
-        //         *GLOB_ERROR = true;
-        //         exit(0);
-        //     }
-        //     exit(0);
-        // }
 
         // context switch and check for completion
         else
         {
-            int quant = 0;
-            if (queue0)
-            {
-                quant = quantum0;
-            }
-            else if (queue1)
-            {
-                quant = quantum1;
-            }
-            else
-            {
-                quant = quantum2;
-            }
             cont_start = get_time() - start;
-            usleep(quant * 1000);
-            curr->burst_time += quant;
+            usleep(quanta[MLFQ_current] * 1000);
+            p[i].burst_time += quanta[MLFQ_current];
             cont_end = get_time() - start;
-            int priority = 0;
-            if (queue0)
-            {
-                priority = 2;
-            }
-            else if (queue1)
-            {
-                priority = 1;
-            }
-            else
-            {
-                priority = 0;
-            }
-
-            // printf("%s|%ld|%ld|%d|%d|%d|%d|%s|%s|%s\n", curr->command, cont_start, cont_end, priority, !isEmpty(queues[0]) ? queues[0]->tail - queues[0]->head + 1 : 0, !isEmpty(queues[1]) ? queues[1]->tail - queues[1]->head + 1 : 0, !isEmpty(queues[2]) ? queues[2]->tail - queues[2]->head + 1 : 0, queue0 ? "Yes" : "No", queue1 ? "Yes" : "No", queue2 ? "Yes" : "No");
-            printf("%s|%ld|%ld|%d\n", curr->command, cont_start, cont_end, priority);
+            printf("%s|%ld|%ld|%d\n", p[i].command, cont_start, cont_end, MLFQ_current);
             fflush(stdout);
-            int status = waitpid(curr->process_id, NULL, WNOHANG);
+            int status = waitpid(p[i].process_id, NULL, WNOHANG);
             if (status == 0)
             {
-                kill(curr->process_id, SIGSTOP);
-                if (queue0)
-                {
-                    enqueue(queues[1], curr);
-                    // printf("Enqueued %s to q1, q1 size = %d\n", curr->command, );
-                }
-                else if (queue1)
-                {
-                    enqueue(queues[2], curr);
-                }
-                else
-                {
-                    enqueue(queues[2], curr);
-                }
+
+                kill(p[i].process_id, SIGSTOP);
             }
             else
             {
                 uint64_t end = get_time();
-                curr->finished = true;
+                p[i].finished = true;
                 completed++;
                 if (*GLOB_ERROR)
                 {
-                    curr->error = true;
-                    curr->finished = false;
+                    p[i].error = true;
+                    p[i].finished = false;
                     *GLOB_ERROR = false;
                 }
 
-                curr->completion_time = end;
-                curr->turnaround_time = curr->completion_time - start;
-                curr->waiting_time = curr->turnaround_time - curr->burst_time;
-                curr->response_time = curr->start_time - start;
+                p[i].completion_time = end;
+                p[i].turnaround_time = p[i].completion_time - start;
+                p[i].waiting_time = p[i].turnaround_time - p[i].burst_time;
+                p[i].response_time = p[i].start_time - start;
 
-                fprintf(f, "%s, %s, %s, %ld, %ld, %ld, %ld\n", curr->command, curr->finished ? "Yes" : "No", curr->error ? "Yes" : "No", curr->burst_time, curr->turnaround_time, curr->waiting_time, curr->response_time);
+                fprintf(f, "%s,%s,%s,%ld,%ld,%ld,%ld\n", p[i].command, p[i].finished ? "Yes" : "No", p[i].error ? "Yes" : "No", p[i].burst_time, p[i].turnaround_time, p[i].waiting_time, p[i].response_time);
                 fflush(f);
             }
             i++;
         }
-        // else
-        // {
-        //     cont_start = get_time() - start;
-        //     usleep(quanta[MLFQ_current] * 1000);
-        //     p[i].burst_time += quanta[MLFQ_current];
-        //     cont_end = get_time() - start;
-        //     printf("%s|%ld|%ld\n", p[i].command, cont_start, cont_end);
-        //     int status = waitpid(p[i].process_id, NULL, WNOHANG);
-        //     if (status == 0)
-        //     {
-
-        //         kill(p[i].process_id, SIGSTOP);
-        //     }
-        //     else
-        //     {
-        //         uint64_t end = get_time();
-        //         p[i].finished = true;
-        //         completed++;
-        //         if (*GLOB_ERROR)
-        //         {
-        //             p[i].error = true;
-        //             p[i].finished = false;
-        //             *GLOB_ERROR = false;
-        //         }
-
-        //         p[i].completion_time = end;
-        //         p[i].turnaround_time = p[i].completion_time - start;
-        //         p[i].waiting_time = p[i].turnaround_time - p[i].burst_time;
-        //         p[i].response_time = p[i].start_time - start;
-
-        //         fprintf(f, "%s, %s, %s, %ld, %ld, %ld, %ld\n", p[i].command, p[i].finished ? "Yes" : "No", p[i].error ? "Yes" : "No", p[i].burst_time, p[i].turnaround_time, p[i].waiting_time, p[i].response_time);
-        //         fflush(f);
-        //     }
-        //     i++;
-        // }
     }
     fclose(f);
 }

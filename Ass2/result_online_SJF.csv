@@ -1,5 +1,11 @@
 Command, Finished, Error, Burst Time, Turnaround Time, Waiting Time, Response Time
-ls, Yes, No, 4, 4, 0, 0
-bash sl.sh 1, Yes, No, 1021, 1026, 5, 5
-bash sl.sh 10, Yes, No, 10150, 11177, 1027, 1027
-bash sl.sh 2, Yes, No, 2033, 13211, 11178, 11178
+bash sl.sh 1,Yes,No,1051,1051,0,0
+bash sl.sh 2,Yes,No,2068,3119,1051,1051
+bash sl.sh 6,Yes,No,6183,9303,3120,3120
+sleasdap 4,No,Yes,201,9505,9304,9304
+bash sl.sh 4,Yes,No,4140,13645,9505,9505
+bash sl.sh 3,Yes,No,3107,16752,13645,13645
+sleasdap 3,No,Yes,256,17008,16752,16752
+bash sl.sh 2,Yes,No,2093,19101,17008,17008
+bash sl.sh 2,Yes,No,2078,21180,19102,19102
+bash sl.sh 4,Yes,No,4128,25308,21180,21180

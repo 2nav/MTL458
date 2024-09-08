@@ -268,7 +268,7 @@ void ShortestJobFirst()
                 p[min_index].finished = true;
             }
             *GLOB_ERROR = false;
-            fprintf(f, "%s, %s, %s, %ld, %ld, %ld, %ld\n", p[min_index].command, p[min_index].finished ? "Yes" : "No", p[min_index].error ? "Yes" : "No", p[min_index].burst_time, p[min_index].turnaround_time, p[min_index].waiting_time, p[min_index].response_time);
+            fprintf(f, "%s,%s,%s,%ld,%ld,%ld,%ld\n", p[min_index].command, p[min_index].finished ? "Yes" : "No", p[min_index].error ? "Yes" : "No", p[min_index].burst_time, p[min_index].turnaround_time, p[min_index].waiting_time, p[min_index].response_time);
             fflush(f);
         }
     }
@@ -442,7 +442,7 @@ void MultiLevelFeedbackQueue(int quantum0, int quantum1, int quantum2, int boost
                     p[curr_proc].finished = true;
                 }
                 *GLOB_ERROR = false;
-                fprintf(f, "%s, %s, %s, %ld, %ld, %ld, %ld\n", p[curr_proc].command, p[curr_proc].finished ? "Yes" : "No", p[curr_proc].error ? "Yes" : "No", p[curr_proc].burst_time, p[curr_proc].turnaround_time, p[curr_proc].waiting_time, p[curr_proc].response_time);
+                fprintf(f, "%s,%s,%s,%ld,%ld,%ld,%ld\n", p[curr_proc].command, p[curr_proc].finished ? "Yes" : "No", p[curr_proc].error ? "Yes" : "No", p[curr_proc].burst_time, p[curr_proc].turnaround_time, p[curr_proc].waiting_time, p[curr_proc].response_time);
                 fflush(f);
             }
         }

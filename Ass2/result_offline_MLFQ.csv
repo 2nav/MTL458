@@ -1,3 +1,11 @@
 Command, Finished, Error, Burst Time, Turnaround Time, Waiting Time, Response Time
-sleeasdap 4, No, Yes, 100, 402, 302, 302
-sleeasdap 4, No, Yes, 100, 805, 705, 704
+sleeasdap 4,No,Yes,300,1812,1512,307
+sleeasdap 4,No,Yes,300,2614,2314,709
+bash sl.sh 1,Yes,No,1200,8231,7031,4
+bash sl.sh 2,Yes,No,2100,14758,12658,105
+bash sl.sh 2,Yes,No,2100,16065,13965,508
+bash sl.sh 2,Yes,No,2100,16466,14366,810
+bash sl.sh 3,Yes,No,3300,21078,17778,609
+bash sl.sh 4,Yes,No,4200,23786,19586,407
+bash sl.sh 4,Yes,No,4200,24087,19887,910
+bash sl.sh 6,Yes,No,6300,26193,19893,206

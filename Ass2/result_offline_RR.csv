@@ -1,1 +1,4 @@
 Command, Finished, Error, Burst Time, Turnaround Time, Waiting Time, Response Time
+slee 1,No,Yes,1000,3012,2012,2012
+./sl.sh 4,Yes,No,5000,11018,6018,1011
+./sl.sh 5,Yes,No,6000,12020,6020,10
