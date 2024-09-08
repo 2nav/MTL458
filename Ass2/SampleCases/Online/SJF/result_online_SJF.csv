@@ -1,0 +1,6 @@
+Command, Finished, Error, Burst Time, Turnaround Time, Waiting Time, Response Time
+./dummy_p 10, Yes, No, 10004, 10004, 0, 0
+./dummy_p 1, Yes, No, 1002, 1002, 0, 0
+./dummy_p 2, Yes, No, 2003, 3005, 1002, 1002
+./dummy_p 1, Yes, No, 1003, 4008, 3005, 3005
+./dummy_p 2, Yes, No, 2002, 6011, 4009, 4009

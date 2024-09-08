@@ -1,0 +1,11 @@
+Command, Finished, Error, Burst Time, Turnaround Time, Waiting Time, Response Time
+ls, Yes, No, 200, 201, 1, 1
+bash sl.sh 1, Yes, No, 7919, 8119, 200, 200
+bash sl.sh 1, Yes, No, 7920, 8521, 601, 601
+bash sl.sh 1, Yes, No, 8721, 10526, 1805, 1805
+bash sl.sh 2, Yes, No, 14737, 15539, 802, 802
+bash sl.sh 2, Yes, No, 15539, 17144, 1605, 1605
+bash sl.sh 3, Yes, No, 19147, 20150, 1003, 1003
+bash sl.sh 3, Yes, No, 19347, 20751, 1404, 1404
+bash sl.sh 10, Yes, No, 33875, 34276, 401, 401
+bash sl.sh 10, Yes, No, 33372, 34576, 1204, 1204

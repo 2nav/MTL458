@@ -1,0 +1,10 @@
+ls
+bash sl.sh 1
+bash sl.sh 10
+bash sl.sh 1
+bash sl.sh 2
+bash sl.sh 3
+bash sl.sh 10
+bash sl.sh 3
+bash sl.sh 2
+bash sl.sh 1

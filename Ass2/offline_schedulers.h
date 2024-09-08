@@ -96,6 +96,8 @@ void FCFS(Process p[], int n)
         // Execute the process
         p[i].finished = false;
         p[i].error = false;
+
+        // parse tokens
         char *args[INSIZE];
         int commandSize = strlen(p[i].command);
         char command[commandSize + 1];
@@ -170,6 +172,7 @@ void RoundRobin(Process p[], int n, int quantum)
     fprintf(f, "Command, Finished, Error, Burst Time, Turnaround Time, Waiting Time, Response Time\n");
     fflush(f);
 
+    // initialize process parameters
     for (int i = 0; i < n; i++)
     {
         p[i].finished = false;
@@ -274,11 +277,13 @@ void MultiLevelFeedbackQueue(Process p[], int n, int quantum0, int quantum1, int
         p[i].started = false;
         p[i].burst_time = 0;
     }
-    int quanta[3] = {quantum0, quantum1, quantum2};
+    int quanta[3] = {quantum2, quantum1, quantum0}; // initiailly implemented with 2 as highest, switching makes less readable somewhat, so reversed the order here only
     int MLFQ_current = 2;
 
     int i = 0;
     int completed = 0;
+    uint64_t boosts = 0;
+
     GLOB_ERROR = mmap(NULL, sizeof *GLOB_ERROR, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     *GLOB_ERROR = false;
 
@@ -289,26 +294,35 @@ void MultiLevelFeedbackQueue(Process p[], int n, int quantum0, int quantum1, int
     while (completed < n)
     {
         uint64_t cont_start, cont_end = start;
+
+        // if a round is complted go to lower priority for all
         if (i == n && MLFQ_current > 0)
         {
             MLFQ_current--;
         }
         uint64_t curr_t = get_time();
-        if (curr_t - start >= boostTime && MLFQ_current == 0)
+
+        // boost the priority at boostTime intervals
+        if (curr_t - start >= boostTime * (boosts + 1) && MLFQ_current == 0)
         {
             MLFQ_current = 2;
+            boosts++;
         }
         i %= n;
 
+        // continue if process is finished or errored
         if (p[i].finished || p[i].error)
         {
             i++;
             continue;
         }
+
+        // continue process if process is started
         if (p[i].started)
         {
             kill(p[i].process_id, SIGCONT);
         }
+        // start the process if not started
         else
         {
             p[i].start_time = get_time();
@@ -316,6 +330,7 @@ void MultiLevelFeedbackQueue(Process p[], int n, int quantum0, int quantum1, int
             p[i].process_id = fork();
         }
 
+        // execute the process
         if (p[i].process_id == 0)
         {
             char *args[INSIZE];
@@ -331,13 +346,16 @@ void MultiLevelFeedbackQueue(Process p[], int n, int quantum0, int quantum1, int
             }
             exit(0);
         }
+
+        // context switch and check for completion
         else
         {
             cont_start = get_time() - start;
             usleep(quanta[MLFQ_current] * 1000);
             p[i].burst_time += quanta[MLFQ_current];
             cont_end = get_time() - start;
-            printf("%s|%ld|%ld\n", p[i].command, cont_start, cont_end);
+            printf("%s|%ld|%ld|%d\n", p[i].command, cont_start, cont_end, MLFQ_current);
+            fflush(stdout);
             int status = waitpid(p[i].process_id, NULL, WNOHANG);
             if (status == 0)
             {

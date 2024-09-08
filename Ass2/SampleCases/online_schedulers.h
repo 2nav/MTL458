@@ -40,79 +40,6 @@ typedef struct
     char *args[INSIZE];
 } Process;
 
-/**
-  ____  _    _ ______ _    _ ______
- / __ \| |  | |  ____| |  | |  ____|
-| |  | | |  | | |__  | |  | | |__
-| |  | | |  | |  __| | |  | |  __|
-| |__| | |__| | |____| |__| | |____
- \___\_\\____/|______|\____/|______|
- */
-
-// Queue implementation
-typedef struct ProcessQueue
-{
-    Process *processes[MAX_PROCESSES];
-    int head;
-    int tail;
-    int size;
-} ProcessQueue;
-
-// Function to create a queue
-ProcessQueue *createQueue()
-{
-    ProcessQueue *q = (ProcessQueue *)malloc(sizeof(ProcessQueue));
-    q->head = -1;
-    q->tail = -1;
-    return q;
-}
-
-// Function to add an element to the queue
-void enqueue(ProcessQueue *q, Process *p)
-{
-    if (q->head == -1)
-    {
-        q->head = 0;
-    }
-    q->tail = (q->tail + 1);
-    q->processes[q->tail] = p;
-}
-
-// Function to remove an element from the queue
-Process *dequeue(ProcessQueue *q)
-{
-    if (q->head == -1) // Check if the queue is empty
-    {
-        return NULL; // Return NULL if the queue is empty
-    }
-
-    Process *p = q->processes[q->head]; // Get a pointer to the process
-
-    if (q->head == q->tail)
-    {
-        q->head = -1;
-        q->tail = -1;
-    }
-    else
-    {
-        q->head = q->head + 1;
-    }
-
-    return p; // Return the pointer to the process
-}
-
-// Function to check if the queue is empty
-bool isEmpty(ProcessQueue *q)
-{
-    return q->head == -1;
-}
-
-// Function to get the size of the queue
-int size(ProcessQueue *q)
-{
-    return isEmpty(q) ? 0 : q->tail - q->head + 1;
-}
-
 void inputParser(char *str, char *args[INSIZE])
 {
     char *token = strtok(str, " \t");
@@ -173,7 +100,7 @@ void set_average_time(Process *p, int index, uint8_t proc_count)
     }
 }
 
-void set_priority_MLFQ(Process *p, int index, uint8_t proc_count, int quantum0, int quantum1, int quantum2, ProcessQueue *queues[3])
+void set_priority_MLFQ(Process *p, int index, uint8_t proc_count, int quantum0, int quantum1, int quantum2)
 {
     int count = 0;
     int total_time = 0;
@@ -192,23 +119,15 @@ void set_priority_MLFQ(Process *p, int index, uint8_t proc_count, int quantum0, 
         {
             // printf("command: %s, average time: %d\n", p[index].command, average_time);
             p[index].priority = 0;
-            enqueue(queues[0], &p[index]);
         }
         else if (average_time <= quantum1)
         {
             p[index].priority = 1;
-            enqueue(queues[1], &p[index]);
         }
         else
         {
             p[index].priority = 2;
-            enqueue(queues[2], &p[index]);
         }
-    }
-    else
-    {
-        p[index].priority = 1;
-        enqueue(queues[1], &p[index]);
     }
 }
 
@@ -377,15 +296,7 @@ void MultiLevelFeedbackQueue(int quantum0, int quantum1, int quantum2, int boost
     bool queue1 = false;
     bool queue2 = false;
 
-    // the queues
-    ProcessQueue *q0 = createQueue();
-    ProcessQueue *q1 = createQueue();
-    ProcessQueue *q2 = createQueue();
-
-    // array of queues
-    ProcessQueue *queues[3] = {q0, q1, q2};
-
-    uint64_t boosts = 0;
+    int boosts = 0;
 
     // non blocking input
     fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL, 0) | O_NONBLOCK); // I do not understand a single word written here
@@ -410,11 +321,6 @@ void MultiLevelFeedbackQueue(int quantum0, int quantum1, int quantum2, int boost
             p[proc_count].priority = 1;
 
             printf("Command: %s\n", p[proc_count].command);
-            // update the priority according to burst time
-
-            set_priority_MLFQ(p, proc_count, proc_count, quantum0, quantum1, quantum2, queues);
-
-            printf("queues: %d %d %d\n", size(q0), size(q1), size(q2));
             proc_count++;
         }
         // printf("here at time %ld\n", get_time() - start);
@@ -425,6 +331,12 @@ void MultiLevelFeedbackQueue(int quantum0, int quantum1, int quantum2, int boost
         queue0 = false;
         queue1 = false;
         queue2 = false;
+
+        // update the priority according to burst time
+        for (int i = 0; i < proc_count; i++)
+        {
+            set_priority_MLFQ(p, i, proc_count, quantum0, quantum1, quantum2);
+        }
 
         uint64_t curr_t = get_time() - start;
         if (curr_t > (boosts + 1) * boostTime)
@@ -437,97 +349,54 @@ void MultiLevelFeedbackQueue(int quantum0, int quantum1, int quantum2, int boost
                     p[i].priority = 0;
                 }
             }
+        }
 
-            while (!isEmpty(q1))
+        for (int i = 0; i < proc_count; i++)
+        {
+            int buff = (prev_proc + 1 + i) % proc_count;
+            if (!p[buff].finished && !p[buff].error)
             {
-                Process *p = dequeue(q1);
-                p->priority = 0;
-                enqueue(q0, p);
-                // printf("Size of q0: %d, q1: %d\n", size(q0), size(q1));
+                if (p[buff].priority == 0 && !queue0)
+                {
+                    queue0 = true;
+                    curr_proc = buff;
+                    curr_quantum = quantum0;
+                }
+                else if (p[buff].priority == 1 && !queue0 && !queue1)
+                {
+                    queue1 = true;
+                    curr_proc = buff;
+                    curr_quantum = quantum1;
+                }
+                else if (p[buff].priority == 2 && !queue0 && !queue1 && !queue2)
+                {
+                    queue2 = true;
+                    curr_proc = buff;
+                    curr_quantum = quantum2;
+                }
             }
-            while (!isEmpty(q2))
-            {
-                Process *p = dequeue(q2);
-                p->priority = 0;
-                enqueue(q0, p);
-            }
         }
-        queue0 = queue1 = queue2 = false;
-        Process *curr;
-        int priority = 0;
-        if (!isEmpty(q0))
-        {
-            queue0 = true;
-            curr = dequeue(q0);
-            curr_quantum = quantum0;
-            priority = 0;
-        }
-        else if (!isEmpty(q1))
-        {
-            queue1 = true;
-            curr = dequeue(q1);
-            curr_quantum = quantum1;
-            priority = 1;
-        }
-        else if (!isEmpty(q2))
-        {
-            queue2 = true;
-            curr = dequeue(q2);
-            curr_quantum = quantum2;
-            priority = 2;
-        }
-
-        // for (int i = 0; i < proc_count; i++)
-        // {
-        //     int buff = (prev_proc + 1 + i) % proc_count;
-        //     if (!p[buff].finished && !p[buff].error)
-        //     {
-        //         if (p[buff].priority == 0 && !queue0)
-        //         {
-        //             queue0 = true;
-        //             curr_proc = buff;
-        //             curr_quantum = quantum0;
-        //         }
-        //         else if (p[buff].priority == 1 && !queue0 && !queue1)
-        //         {
-        //             queue1 = true;
-        //             curr_proc = buff;
-        //             curr_quantum = quantum1;
-        //         }
-        //         else if (p[buff].priority == 2 && !queue0 && !queue1 && !queue2)
-        //         {
-        //             queue2 = true;
-        //             curr_proc = buff;
-        //             curr_quantum = quantum2;
-        //         }
-        //     }
-        // }
-
-        if (!queue0 && !queue1 && !queue2)
+        if (curr_proc == -1)
         {
             continue;
         }
-        // if (curr_proc == -1)
-        // {
-        //     continue;
-        // }
         // printf("Executing: %s\n", p[curr_proc].command);
-        if (curr->started)
+        if (p[curr_proc].started)
         {
-            kill(curr->process_id, SIGCONT);
+            kill(p[curr_proc].process_id, SIGCONT);
         }
         else
         {
-            curr->start_time = get_time() - start;
-            curr->started = true;
-            curr->process_id = fork();
+            p[curr_proc].start_time = get_time() - start;
+            p[curr_proc].started = true;
+            p[curr_proc].process_id = fork();
         }
-        if (curr->process_id == 0)
+        if (p[curr_proc].process_id == 0)
         {
             char *args[INSIZE];
-            int commandSize = strlen(curr->command);
+            int commandSize = strlen(p[curr_proc].command);
             char command[commandSize + 1];
-            strcpy(command, curr->command);
+            strcpy(command, p[curr_proc].command);
             command[commandSize] = '\0';
             inputParser(command, args);
 
@@ -538,57 +407,42 @@ void MultiLevelFeedbackQueue(int quantum0, int quantum1, int quantum2, int boost
         }
         else
         {
-            // fprintf(f, "Current priority %d , Curremt time %ld\n", curr->priority, get_time() - start);
+            // fprintf(f, "Current priority %d , Curremt time %ld\n", p[curr_proc].priority, get_time() - start);
             // fflush(f);
             cont_start = get_time() - start;
             usleep(curr_quantum * 1000);
-            curr->burst_time += curr_quantum;
+            p[curr_proc].burst_time += curr_quantum;
             cont_end = get_time() - start;
 
-            // printf("%s|%ld|%ld\n", curr->command, cont_start, cont_end);
-            printf("%s|%ld|%ld|%d\n", curr->command, cont_start, cont_end, priority);
-
+            printf("%s|%ld|%ld\n", p[curr_proc].command, cont_start, cont_end);
             prev_proc = curr_proc;
 
-            // curr->priority = curr->priority != 2 ? curr->priority + 1 : 2;
+            p[curr_proc].priority = p[curr_proc].priority != 2 ? p[curr_proc].priority + 1 : 2;
 
-            int status = waitpid(curr->process_id, NULL, WNOHANG);
+            int status = waitpid(p[curr_proc].process_id, NULL, WNOHANG);
             if (status == 0)
             {
-                kill(curr->process_id, SIGSTOP);
-                if (queue0)
-                {
-                    enqueue(queues[1], curr);
-                    // printf("Enqueued %s to q1, q1 size = %d\n", curr->command, );
-                }
-                else if (queue1)
-                {
-                    enqueue(queues[2], curr);
-                }
-                else
-                {
-                    enqueue(queues[2], curr);
-                }
+                kill(p[curr_proc].process_id, SIGSTOP);
             }
             else
             {
-                curr->completion_time = get_time() - start;
-                curr->burst_time = curr->completion_time - curr->start_time;
-                curr->turnaround_time = curr->completion_time - curr->arrival_time;
-                curr->waiting_time = curr->turnaround_time - curr->burst_time;
-                curr->response_time = curr->start_time - curr->arrival_time;
+                p[curr_proc].completion_time = get_time() - start;
+                p[curr_proc].burst_time = p[curr_proc].completion_time - p[curr_proc].start_time;
+                p[curr_proc].turnaround_time = p[curr_proc].completion_time - p[curr_proc].arrival_time;
+                p[curr_proc].waiting_time = p[curr_proc].turnaround_time - p[curr_proc].burst_time;
+                p[curr_proc].response_time = p[curr_proc].start_time - p[curr_proc].arrival_time;
                 if (*GLOB_ERROR)
                 {
-                    curr->error = true;
-                    curr->finished = false;
+                    p[curr_proc].error = true;
+                    p[curr_proc].finished = false;
                 }
                 else
                 {
-                    curr->error = false;
-                    curr->finished = true;
+                    p[curr_proc].error = false;
+                    p[curr_proc].finished = true;
                 }
                 *GLOB_ERROR = false;
-                fprintf(f, "%s, %s, %s, %ld, %ld, %ld, %ld\n", curr->command, curr->finished ? "Yes" : "No", curr->error ? "Yes" : "No", curr->burst_time, curr->turnaround_time, curr->waiting_time, curr->response_time);
+                fprintf(f, "%s, %s, %s, %ld, %ld, %ld, %ld\n", p[curr_proc].command, p[curr_proc].finished ? "Yes" : "No", p[curr_proc].error ? "Yes" : "No", p[curr_proc].burst_time, p[curr_proc].turnaround_time, p[curr_proc].waiting_time, p[curr_proc].response_time);
                 fflush(f);
             }
         }

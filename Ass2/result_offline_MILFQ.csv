@@ -1,1 +1,3 @@
 Command, Finished, Error, Burst Time, Turnaround Time, Waiting Time, Response Time
+sleeasdap 4, No, Yes, 100, 403, 303, 303
+sleeasdap 4, No, Yes, 100, 805, 705, 704
