@@ -1,5 +1,25 @@
 Command, Finished, Error, Burst Time, Turnaround Time, Waiting Time, Response Time
-bash sl.sh 5,Yes,No,5300,5309,9,0
-bash sl.sh 6,Yes,No,6200,10723,4523,0
-bash sl.sh 5,Yes,No,5100,9922,4822,301
-bash sl.sh 10,Yes,No,10400,10421,21,0
+./procesd 7 p5,No,Yes,20,64,44,43
+./procesd 7 p3,No,Yes,20,85,65,65
+./procesd 7 p5,No,Yes,20,252,232,232
+./procesd 7 p3,No,Yes,20,274,254,253
+./procesd 7 p5,No,Yes,20,400,380,379
+./procesd 7 p3,No,Yes,20,421,401,400
+hello,No,Yes,230,4169,3939,337
+./process 0.5 p11,Yes,No,500,8622,8122,149
+./process 0.5 p11,Yes,No,510,9036,8526,107
+./process 0.5 p11,Yes,No,510,9057,8547,170
+./process 0.5 p11,Yes,No,510,9079,8569,211
+./process 3 p4,Yes,No,2990,41404,38414,86
+./process 3 p4,Yes,No,2990,41526,38536,295
+./process 3 p4,Yes,No,2990,41648,38658,445
+./process 5 p6,Yes,No,4940,61237,56297,128
+./process 5 p1,Yes,No,4940,61390,56450,422
+./process 5 p1,Yes,No,4970,61511,56541,22
+./process 5 p1,Yes,No,4970,61573,56603,275
+./process 5 p6,Yes,No,4970,61604,56634,316
+./process 5 p6,Yes,No,4970,61665,56695,466
+./process 10 p2,Yes,No,9890,81520,71630,190
+./process 10 p2,Yes,No,9920,81612,71692,1
+./process 10 p2,Yes,No,9920,81674,71754,487
+./process 10 p2,Yes,No,9950,81705,71755,358

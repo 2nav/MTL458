@@ -1,5 +1,5 @@
-// #include "offline_schedulers_1.h"
-#include "online_schedulers.h"
+// #include "offline_schedulers.h"
+#include "online_test.h"
 #include <stdio.h>
 
 // int main()
@@ -33,12 +33,12 @@
 //     MultiLevelFeedbackQueue(p, 10, 100, 200, 300, 3000);
 //     // RoundRobin(p, 10, 100);
 // }
-// void main()
-// {
-//     freopen("input.txt", "r", stdin);
-//     ShortestJobFirst();
-// }
 void main()
 {
-    MultiLevelFeedbackQueue(100, 200, 300, 3000);
+    freopen("input.txt", "r", stdin);
+    ShortestJobFirst();
 }
+// void main()
+// {
+//     MultiLevelFeedbackQueue(10, 20, 30, 3000);
+// }

@@ -110,7 +110,7 @@ bool isEmpty(ProcessQueue *q)
 // Function to get the size of the queue
 int size(ProcessQueue *q)
 {
-    return isEmpty(q) ? 0 : (q->tail - q->head + 1) % MAX_PROCESSES;
+    return isEmpty(q) ? 0 : (q->tail - q->head + 1 + MAX_PROCESSES) % MAX_PROCESSES;
 }
 
 /**
@@ -421,7 +421,6 @@ void MultiLevelFeedbackQueue(int quantum0, int quantum1, int quantum2, int boost
     {
         uint64_t cont_start, cont_end;
         int prev_proc = 0;
-
         // read input
         while (proc_count < MAX_PROCESSES)
         {
@@ -555,7 +554,7 @@ void MultiLevelFeedbackQueue(int quantum0, int quantum1, int quantum2, int boost
             if (status == 0)
             {
                 kill(curr->process_id, SIGSTOP);
-
+                // printf("Process %s paused\n", curr->command);
                 // move to the next lower queue if not finished
                 if (queue0)
                 {

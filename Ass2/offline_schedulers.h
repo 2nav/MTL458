@@ -74,7 +74,7 @@ void enqueue(ProcessQueue *q, Process *p)
     {
         q->head = 0;
     }
-    q->tail = (q->tail + 1);
+    q->tail = (q->tail + 1) % MAX_COMMANDS;
     q->processes[q->tail] = p;
 }
 
@@ -95,7 +95,7 @@ Process *dequeue(ProcessQueue *q)
     }
     else
     {
-        q->head = q->head + 1;
+        q->head = (q->head + 1) % MAX_COMMANDS;
     }
 
     return p; // Return the pointer to the process
@@ -110,7 +110,7 @@ bool isEmpty(ProcessQueue *q)
 // Function to get the size of the queue
 int size(ProcessQueue *q)
 {
-    return isEmpty(q) ? 0 : q->tail - q->head + 1;
+    return isEmpty(q) ? 0 : (q->tail - q->head + 1) % MAX_COMMANDS;
 }
 
 // Function prototypes

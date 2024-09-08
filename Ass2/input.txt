@@ -1,10 +1,12 @@
 bash sl.sh 1
 bash sl.sh 2
 bash sl.sh 6
+
 sleasdap 4
 bash sl.sh 4
 bash sl.sh 2
 bash sl.sh 3
 sleasdap 3
 bash sl.sh 2
+
 bash sl.sh 4
