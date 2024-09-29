@@ -1,4 +1,11 @@
 Command, Finished, Error, Burst Time, Turnaround Time, Waiting Time, Response Time
-slee 1,No,Yes,1000,3012,2012,2012
-./sl.sh 4,Yes,No,5000,11018,6018,1011
-./sl.sh 5,Yes,No,6000,12020,6020,10
+./procesd 33 p4,No,Yes,100,403,303,303
+./procesd 1 p8,No,Yes,100,806,706,705
+./process 1 p1,Yes,No,1100,8324,7224,2
+./process 2 p6,Yes,No,2000,15041,13041,504
+./process 2 p2,Yes,No,2100,15442,13342,102
+./process 2 p9,Yes,No,2100,15844,13744,806
+./process 3 p7,Yes,No,3000,19453,16453,605
+./process 4 p5,Yes,No,4000,22459,18459,404
+./process 4 p10,Yes,No,4000,22560,18560,907
+./process 6 p3,Yes,No,6000,24564,18564,203

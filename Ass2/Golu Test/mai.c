@@ -57,7 +57,7 @@ int main()
     }
     // FCFS(processes, num_commands);
     // RoundRobin(processes, num_commands, 100);
-    MultiLevelFeedbackQueue(processes, num_commands, 100, 200, 300, 3000);
+    MultiLevelFeedbackQueue(processes, num_commands, 1, 2, 3, 40);
     // ShortestJobFirst();
     // freopen("output.txt", "w", stdout);
     // fflush(stdout);

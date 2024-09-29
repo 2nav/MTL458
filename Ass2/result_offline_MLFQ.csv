@@ -1,11 +1,11 @@
 Command, Finished, Error, Burst Time, Turnaround Time, Waiting Time, Response Time
-./procesd 33 p4,No,Yes,100,408,308,307
-./procesd 1 p8,No,Yes,100,814,714,713
-./process 1 p1,Yes,No,1200,8034,6834,3
-./process 2 p2,Yes,No,2100,14347,12247,104
-./process 2 p6,Yes,No,2100,15249,13149,510
-./process 2 p9,Yes,No,2100,16151,14051,815
-./process 3 p7,Yes,No,3000,19457,16457,612
-./process 4 p5,Yes,No,4200,23064,18864,409
-./process 4 p10,Yes,No,4200,23365,19165,916
-./process 6 p3,Yes,No,6000,25168,19168,206
+./procesd 33 p4,No,Yes,1,7,6,6
+./procesd 1 p8,No,Yes,1,12,11,11
+./process 1 p1,Yes,No,951,8066,7115,1
+./process 2 p6,Yes,No,1903,15127,13224,8
+./process 2 p2,Yes,No,1905,15136,13231,3
+./process 2 p9,Yes,No,1905,15147,13242,12
+./process 3 p7,Yes,No,2862,19173,16311,9
+./process 4 p5,Yes,No,3825,22198,18373,7
+./process 4 p10,Yes,No,3825,22202,18377,13
+./process 6 p3,Yes,No,5745,24197,18452,4

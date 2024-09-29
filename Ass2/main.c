@@ -1,22 +1,22 @@
-// #include "offline_schedulers.h"
-#include "online_test.h"
+#include "offline_schedulers_1.h"
+// #include "online_test.h"
 #include <stdio.h>
 
-// int main()
-// {
-//     // create a Process array
-//     // freopen("output.txt", "w", stdout);
-//     Process p[5];
-//     // initialize the Process array
-//     p[0].command = "./sl.sh 5";
-//     p[1].command = "./sl.sh 4";
-//     p[2].command = "slee 1";
-//     p[3].command = "sleep 1.5";
-//     p[4].command = "sleep 1";
-//     FCFS(p, 3);
-//     RoundRobin(p, 3, 1000);
-//     return 0;
-// }
+int main()
+{
+    // create a Process array
+    // freopen("output.txt", "w", stdout);
+    Process p[5];
+    // initialize the Process array
+    p[0].command = "./sl.sh 5";
+    p[1].command = "./sl.sh 4";
+    p[2].command = "";
+    p[3].command = "sleep 1.5";
+    p[4].command = "sleep 1";
+    FCFS(p, 3);
+    // RoundRobin(p, 3, 1000);
+    return 0;
+}
 // void main()
 // {
 //     Process p[10];
@@ -33,11 +33,11 @@
 //     MultiLevelFeedbackQueue(p, 10, 100, 200, 300, 3000);
 //     // RoundRobin(p, 10, 100);
 // }
-void main()
-{
-    freopen("input.txt", "r", stdin);
-    ShortestJobFirst();
-}
+// void main()
+// {
+//     freopen("input.txt", "r", stdin);
+//     ShortestJobFirst();
+// }
 // void main()
 // {
 //     MultiLevelFeedbackQueue(10, 20, 30, 3000);

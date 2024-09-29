@@ -226,10 +226,16 @@ void FCFS(Process p[], int n)
             if (*GLOB_ERROR)
             {
                 p[i].error = true;
+                p[i].finished = false;
+            }
+            else
+            {
+                p[i].error = false;
+                p[i].finished = true;
             }
 
             // Update the process parameters
-            p[i].finished = true;
+
             time_t end = get_time();
             p[i].completion_time = end;
             p[i].turnaround_time = p[i].completion_time - start;

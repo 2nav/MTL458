@@ -1,0 +1,11 @@
+Command,Finished,Error,Burst Time,Turnaround Time,Waiting Time,Response Time
+./process 1 p1,Yes,No,1002,1002,0,0
+./process 2 p2,Yes,No,2002,3006,1004,1004
+./process 6 p3,Yes,No,6003,9010,3007,3007
+./procesd 33 p4,No,Yes,0,9012,9012,9012
+./process 4 p5,Yes,No,4002,13016,9014,9014
+./process 2 p6,Yes,No,2003,15021,13018,13018
+./process 3 p7,Yes,No,3002,18025,15023,15023
+./procesd 1 p8,No,Yes,0,18027,18027,18027
+./process 2 p9,Yes,No,2002,20031,18029,18029
+./process 4 p10,Yes,No,4003,24036,20033,20033
