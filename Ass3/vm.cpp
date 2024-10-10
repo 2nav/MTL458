@@ -9,10 +9,92 @@
 
 constexpr int ADDR_BITS = 32;
 
+// queue implementation for FIFO
+class Queue
+{
+    int front, rear, size;
+    unsigned capacity;
+    uint32_t *array;
+
+public:
+    void init(unsigned capacity)
+    {
+        front = size = 0;
+        rear = capacity - 1;
+        this->capacity = capacity;
+        array = new uint32_t[capacity];
+    }
+
+    void push(uint32_t item)
+    {
+        if (size == capacity)
+            return;
+        rear = (rear + 1) % capacity;
+        array[rear] = item;
+        size++;
+    }
+
+    void pop()
+    {
+        if (size == 0)
+            return;
+        front = (front + 1) % capacity;
+        size--;
+    }
+
+    uint32_t top()
+    {
+        if (size == 0)
+            return -1;
+        return array[front];
+    }
+};
+
+class Stack
+{
+    int top;
+    unsigned capacity;
+    uint32_t *array;
+
+public:
+    void init(unsigned capacity)
+    {
+        top = -1;
+        this->capacity = capacity;
+        array = new uint32_t[capacity];
+    }
+
+    void push(uint32_t item)
+    {
+        if (top == capacity - 1)
+            return;
+        array[++top] = item;
+    }
+
+    void pop()
+    {
+        if (top == -1)
+            return;
+        top--;
+    }
+
+    uint32_t front()
+    {
+        if (top == -1)
+            return -1;
+        return array[top];
+    }
+};
+
+// set for int, uint32_t
+
 int fifo(std::vector<uint32_t> &vpns, int K)
 {
     std::unordered_map<uint32_t, int> tlb;
-    std::queue<uint32_t> fifo_q;
+    // std::queue<uint32_t> fifo_q;
+    Queue fifo_q;
+    fifo_q.init(K);
+
     int size = 0;
     int hits = 0;
     for (int i = 0; i < vpns.size(); i++)
@@ -26,12 +108,14 @@ int fifo(std::vector<uint32_t> &vpns, int K)
             if (size < K)
             {
                 tlb[vpns[i]] = 1;
-                fifo_q.push(vpns[i]); // push the vpn to the queue
+                // fifo_q.push(vpns[i]); // push the vpn to the queue
+                fifo_q.push(vpns[i]);
                 size++;
             }
             else
             {
-                int front = fifo_q.front();
+                // int front = fifo_q.front();
+                uint32_t front = fifo_q.top();
                 fifo_q.pop();         // pop the front of the queue
                 tlb.erase(front);     // erase the front of the queue from the tlb
                 tlb[vpns[i]] = 1;     // insert the vpn to the tlb
@@ -45,7 +129,10 @@ int fifo(std::vector<uint32_t> &vpns, int K)
 int lifo(std::vector<uint32_t> &vpns, int K)
 {
     std::unordered_map<uint32_t, int> tlb;
-    std::vector<uint32_t> lifo_q;
+    // std::vector<uint32_t> lifo_q;
+    Stack lifo_q;
+    lifo_q.init(K);
+
     int size = 0;
     int hits = 0;
     for (int i = 0; i < vpns.size(); i++)
@@ -59,16 +146,20 @@ int lifo(std::vector<uint32_t> &vpns, int K)
             if (size < K)
             {
                 tlb[vpns[i]] = 1;
-                lifo_q.push_back(vpns[i]); // push the vpn to the queue
+                // lifo_q.push_back(vpns[i]); // push the vpn to the queue
+                lifo_q.push(vpns[i]);
                 size++;
             }
             else
             {
-                int back = lifo_q.back();
-                lifo_q.pop_back();         // pop the back of the queue
-                tlb.erase(back);           // erase the back of the queue from the tlb
-                tlb[vpns[i]] = 1;          // insert the vpn to the tlb
-                lifo_q.push_back(vpns[i]); // push the vpn to the queue
+                // int back = lifo_q.back();
+                uint32_t back = lifo_q.front();
+                // lifo_q.pop_back();         // pop the back of the queue
+                lifo_q.pop();
+                tlb.erase(back);  // erase the back of the queue from the tlb
+                tlb[vpns[i]] = 1; // insert the vpn to the tlb
+                // lifo_q.push_back(vpns[i]); // push the vpn to the queue
+                lifo_q.push(vpns[i]);
             }
         }
     }
@@ -126,28 +217,46 @@ int optimal(std::vector<uint32_t> &vpns, int K)
         tlb_q[vpns[i]].push(i); // store the memory access time for each vpn in ascending order
     }
 
-    for (auto it : tlb_q)
+    for (auto &it : tlb_q)
     {
         it.second.push(inf); // push infinity to the end of the queue to show that the vpn is not accessed anymore
     }
-
+    // for (auto it : tlb_q)
+    // {
+    //     std::cout << it.first << " ";
+    //     while (!it.second.empty())
+    //     {
+    //         std::cout << it.second.front() << " ";
+    //         it.second.pop();
+    //     }
+    //     std::cout << std::endl;
+    // }
     int hits = 0;
     for (int i = 0; i < vpns.size(); i++)
     {
+        // if (tlb_q[vpns[i]].front() != i)
+        // {
+        //     std::cout << i << " Error in queue" << std::endl;
+        // }
         if (tlb.find({-i, vpns[i]}) != tlb.end())
         {
             hits++;
-            tlb.erase({tlb_q[vpns[i]].front(), vpns[i]});   // update the vpn in the tlb
+            tlb.erase({-tlb_q[vpns[i]].front(), vpns[i]});  // update the vpn in the tlb
             tlb_q[vpns[i]].pop();                           // pop the front of the queue, front of queue = current memory access
             tlb.insert({-tlb_q[vpns[i]].front(), vpns[i]}); // insert the vpn to the tlb
         }
         else
         {
-            // for (auto it : tlb)
+            // if (i == vpns.size() - 1)
             // {
-            //     std::cout << it.first << " " << it.second << "  ";
+            //     std::cout << "Last memory access" << std::endl;
+            //     for (auto it : tlb)
+            //     {
+            //         std::cout << it.first << " " << it.second << "  ";
+            //     }
+            //     std::cout << std::endl;
             // }
-            // std::cout << std::endl;
+
             tlb_q[vpns[i]].pop(); // pop the front of the queue, front of queue = current memory access
             if (tlb.size() < K)
             {
@@ -166,27 +275,33 @@ int optimal(std::vector<uint32_t> &vpns, int K)
 
 int main()
 {
+
+    // redirect input from input.txt
+    freopen("test_input_2.txt", "r", stdin);
     int t;
     std::cin >> t;
     while (t--)
     {
         int S, P, K;
-        std::cin >> S >> P >> K;
+        std::cin >> std::dec >> S >> P >> K;
         // TODO : Implement address bounds
         // assuming page size to be in power of 2
         int page_offset_bits = log2(P) + 10;
+        // std::cout << S << " " << P << " " << K << " " << page_offset_bits << std::endl;
 
         int N;
         std::cin >> N;
+        // std::cout << N << std::endl;
         std::vector<uint32_t> addrs(N), vpns(N);
         for (int i = 0; i < N; i++)
         {
             uint32_t addr;
             std::cin >> std::hex >> addr;
             // std::cout << addr << std::endl;
+            // convert hex to decimal
             addrs[i] = addr;
             vpns[i] = addr >> page_offset_bits;
-            std::cout << vpns[i] << std::endl;
+            // std::cout << vpns[i] << std::endl;
         }
         int fifo_hits = fifo(vpns, K);
         int lifo_hits = lifo(vpns, K);

@@ -96,7 +96,8 @@ else:
             addrList.append(n)
     else:
         addrList = addresses.split(',')
-
+fd = open('dbg2.txt', 'r')
+addrList = fd.read().split(',')
 if options.solve == False:
     print('Assuming a replacement policy of %s, and a cache of size %d pages,' % (policy, cachesize))
     print('figure out whether each of the following page references hit or miss')
@@ -116,7 +117,7 @@ else:
     hits = 0
     miss = 0
 
-    if policy == 'FIFO':
+    if policy == 'FIFO' or policy == 'LIFO':
         leftStr = 'FirstIn'
         riteStr = 'Lastin '
     elif policy == 'LRU':
@@ -160,7 +161,7 @@ else:
                 # must replace
                 if policy == 'FIFO' or policy == 'LRU':
                     victim = memory.pop(0)
-                elif policy == 'MRU':
+                elif policy == 'MRU' or policy == 'LIFO':
                     victim = memory.pop(count-1)
                 elif policy == 'RAND':
                     victim = memory.pop(int(random.random() * count))

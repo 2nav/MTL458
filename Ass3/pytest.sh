@@ -1,0 +1,1 @@
+python paging-policy.py --addresses=  --policy=LRU --cachesize=10 -c
