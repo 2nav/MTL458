@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#define FILENAME "shared-filee.txt"
+#define FILENAME "shared-file.txt"
 
 typedef struct __rwlock_t
 {
@@ -25,6 +25,8 @@ void rwlock_acquire_readlock(rwlock_t *rw)
     sem_wait(&rw->lock);
     rw->readers++;
     // printf("Readers present:[%d]\n", rw->readers);
+    printf("Reading,Number-of-readers-present:[%d]\n", rw->readers);
+
     if (rw->readers == 1) // first reader gets writelock
         sem_wait(&rw->writelock);
     sem_post(&rw->lock);
@@ -55,7 +57,7 @@ void *reader(void *arg)
 {
     // your code here
     rwlock_acquire_readlock(&lock);
-    printf("Reading,Number-of-readers-present:[%d]\n", lock.readers);
+    // printf("Reading,Number-of-readers-present:[%d]\n", lock.readers);
 
     // read shared-file.txt
     // https://stackoverflow.com/a/3463793
@@ -97,6 +99,9 @@ void *writer(void *arg)
 
 int main(int argc, char **argv)
 {
+
+    // redirect stdout to output-reader-pref.txt
+    freopen("output-reader-pref.txt", "w", stdout);
 
     // Do not change the code below to spawn threads
     if (argc != 3)

@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#define FILENAME "shared-filee.txt"
+#define FILENAME "shared-file.txt"
 
 typedef struct __rwlock_t
 {
@@ -30,6 +30,8 @@ void rwlock_acquire_readlock(rwlock_t *rw)
 
     sem_wait(&rw->lock);
     rw->readers++;
+    printf("Reading,Number-of-readers-present:[%d]\n", rw->readers);
+
     if (rw->readers == 1) // first reader locks writelock
         sem_wait(&rw->writelock);
     sem_post(&rw->lock);
@@ -73,7 +75,7 @@ rwlock_t lock;
 void *reader(void *arg)
 {
     rwlock_acquire_readlock(&lock);
-    printf("Reading, Number of readers present: [%d]\n", lock.readers);
+    // printf("Reading, Number of readers present: [%d]\n", lock.readers);
 
     FILE *file = fopen(FILENAME, "r");
     if (file == NULL)
@@ -93,7 +95,7 @@ void *reader(void *arg)
 void *writer(void *arg)
 {
     rwlock_acquire_writelock(&lock);
-    printf("Writing, Number of readers present: [%d]\n", lock.readers);
+    printf("Writing,Number-of-readers-present:[%d]\n", lock.readers);
 
     FILE *file = fopen(FILENAME, "a");
     if (file == NULL)
@@ -110,6 +112,9 @@ void *writer(void *arg)
 
 int main(int argc, char **argv)
 {
+    // redirect stdout to output-writer-pref.txt
+    freopen("output-writer-pref.txt", "w", stdout);
+
     // Do not change the code below to spawn threads
     if (argc != 3)
         return 1;

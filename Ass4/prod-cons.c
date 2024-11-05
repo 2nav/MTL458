@@ -54,10 +54,10 @@ void print_buffer()
     // printf("%d\n", print_count);
     while (--print_count > 0)
     {
-        printf("%d,", buffer[i]);
+        printf("%u,", buffer[i]);
         i = (i + 1) % MAX;
     }
-    printf("%d", buffer[i]);
+    printf("%u", buffer[i]);
 
     printf("]\n");
 }
@@ -75,11 +75,12 @@ void *producer(void *arg)
         while (count == MAX)
             pthread_cond_wait(&empty, &mutex);
         unsigned int buff;
-        scanf("%ud", &buff);
+        scanf("%u", &buff);
         put(buff);
         // terminate the producer if input is 0
         if (buff == 0)
         {
+            pthread_cond_signal(&fill);
             pthread_mutex_unlock(&mutex);
             return NULL;
         }
@@ -96,24 +97,31 @@ void *consumer(void *arg)
         pthread_mutex_lock(&mutex);
         while (count == 0)
             pthread_cond_wait(&fill, &mutex);
-        int tmp = get();
-        // terminate the consumer if input is 0
+
+        unsigned int tmp = get();
+
+        // Check for termination condition before printing
         if (tmp == 0)
         {
             pthread_mutex_unlock(&mutex);
             return NULL;
         }
+
+        // Print buffer state after consuming the item
+        printf("Consumed:[%u],Buffer-State:", tmp);
+        print_buffer();
+
         pthread_cond_signal(&empty);
         pthread_mutex_unlock(&mutex);
-        printf("Consumed:[%d],Buffer-State:", tmp);
-        print_buffer();
     }
 }
 
 int main(int argc, char *argv[])
 {
     // read from input-pat1.txt
-    freopen("input-part.txt", "r", stdin);
+    freopen("input-part1.txt", "r", stdin);
+    // redirect stdout to output-part1.txt
+    freopen("output-part1.txt", "w", stdout);
 
     pthread_t p, c;
     // pthread_mutex_init(&mutex);
@@ -122,6 +130,8 @@ int main(int argc, char *argv[])
     pthread_create(&p, NULL, producer, NULL);
     pthread_create(&c, NULL, consumer, NULL);
     pthread_join(p, NULL);
+    // printf("Producer thread joined\n");
     pthread_join(c, NULL);
+    // printf("Consumer thread joined\n");
     return 0;
 }
