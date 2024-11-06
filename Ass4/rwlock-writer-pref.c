@@ -103,7 +103,7 @@ void *writer(void *arg)
         printf("Error opening file!\n");
         exit(1);
     }
-    fprintf(file, "Hello World\n");
+    fprintf(file, "Hello world!\n");
     fclose(file);
 
     rwlock_release_writelock(&lock);

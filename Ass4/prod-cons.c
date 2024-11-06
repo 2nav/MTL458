@@ -1,4 +1,3 @@
-// include thread, locks, condition variable in linux
 // compile: gcc -o prod-cons prod-cons.c -lpthread
 // run: ./prod-cons
 #include <assert.h>
@@ -41,6 +40,7 @@ void print_buffer()
     }
     int i = use_ptr;
     int last = fill_ptr == 0 ? MAX - 1 : fill_ptr - 1;
+    // skip 0
     if (buffer[last] == 0)
     {
         print_count--;
